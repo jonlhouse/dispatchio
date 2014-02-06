@@ -1,9 +1,14 @@
 module Dispatchio
 
   class Listener
+    include Comparable
 
     attr_reader :sid
+    attr_accessor :priority
     @@sid_counter = 0
+
+    # define some priority constants and symbols
+    PRIORITY = { last: 0, low: 25, normal: 50, high: 75, first: 100 }.freeze
 
     # Usage:
     #  Listener.new('event-name')
@@ -18,6 +23,8 @@ module Dispatchio
     #   notation for scoping events and :not.legal.symbol so using symbols 
     #   as events is of limited use, but is allowed.
     def initialize(*params, &block)
+      opts = params.last.is_a?(Hash) ? params.pop : { priority: PRIORITY[:normal] }    # extract options... boo! no 2.0
+      @priority = parse_priority(opts[:priority])
       @sid = @@sid_counter += 1
       @event = parse_event_wildcards(params.shift.to_s)
       raise ArgumentError, "#{@event} cannot be blank or nil" unless @event.length > 0
@@ -35,6 +42,16 @@ module Dispatchio
                   else
                     nil
                   end
+    end
+
+    # Used to sort/compare listener based on priority
+    #
+    # Returns:
+    #   -1 when self should be higher priority than other
+    #    0 when self and other are equal priority
+    #   +1 when self should be lower priority than other
+    def <=>(other)
+      other.priority <=> self.priority
     end
 
     # Returns true if match_str matches @event.
@@ -101,6 +118,16 @@ module Dispatchio
         end
       end
       str
+    end
+
+    # Returns a priority value (0-100) converted a symbol (e.g. :low) into the corrsponding value.
+    def parse_priority(value)
+      num = Float(value) rescue false
+      unless num
+        num = PRIORITY[value.to_sym]
+        raise ArgumentError, "#{value} not a valid priority" unless num
+      end
+      num
     end
 
   end

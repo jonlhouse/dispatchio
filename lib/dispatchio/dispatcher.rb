@@ -2,8 +2,9 @@ module Dispatchio
 
   class Dispatcher
 
-    def initialize
+    def initialize(&block)
       @listeners = []
+      instance_eval(&block) if block_given?
     end
 
     def dispatch(event, payload = {})
@@ -74,8 +75,10 @@ module Dispatchio
                     end
                   end
         add_listener listener
+        listener
       end
     alias_method :<<, :add
+    alias_method :listen, :add
 
     # Removes a listener from the list waiting for events.
     #
@@ -95,6 +98,8 @@ module Dispatchio
 
     def add_listener(listener)
       @listeners << listener
+      # re-sort
+      @listeners.sort!
       listener
     end
 

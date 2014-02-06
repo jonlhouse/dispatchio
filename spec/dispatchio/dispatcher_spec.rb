@@ -14,6 +14,18 @@ module Dispatchio
       subject { Dispatcher.new }
 
       specify { expect(:dispatch).to be_true }
+
+      it "can be initialized with a block" do
+        dispatcher = Dispatcher.new do
+          listen 'a', MyListener
+          listen 'b' do
+            # code
+          end
+          listen 'c', ->(x) { }
+          listen MyListener.new('d')
+        end
+        expect(dispatcher.instance_variable_get(:@listeners).length).to be == 4
+      end
     end
 
     let(:dispatcher) { Dispatcher.new }
@@ -103,6 +115,30 @@ module Dispatchio
       end
     end
 
+    describe "priority" do
+      context "when unspecified" do
+        let(:low_priority) { Listener.new('a') }
+        let(:high_priority) { Listener.new('a') }
+        before(:each) { dispatcher << low_priority ; dispatcher << high_priority }
+        it "run in order they are added" do
+          expect(low_priority).to receive(:handle).ordered
+          expect(high_priority).to receive(:handle).ordered
+          dispatcher.dispatch 'a'
+        end
+      end
+      context "when specificed" do
+        let(:low_priority) { Listener.new('a', priority: :low) }
+        let(:high_priority) { Listener.new('a', priority: :high) }
+        before(:each) { dispatcher << low_priority ; dispatcher << high_priority }
+        it "run in order of priority" do
+          expect(high_priority).to receive(:handle).ordered         
+          expect(low_priority).to receive(:handle).ordered          
+          dispatcher.dispatch 'a'
+        end
+      end
+      
+      specify { }
+    end
 
   end
 

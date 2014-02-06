@@ -78,6 +78,42 @@ Alternatively, a block can be given with the class syntax.
 	end
 ```
 
+### Block Style Definition
+
+```ruby
+	Dispatchio::Dispatcher do
+		# Within the block you call +dispatch+ to add listeners.  Multiple 
+		#  formats are allowed:
+		#
+		# pass Event class
+		listen 'event-a', EventAListener
+
+		# pass block
+		listen 'event-b' do |payload|
+			# handler code
+		end
+
+		# pass lambda
+		listen 'event-c', ->(payload) { # handler code }
+
+		# pass method symbol
+		listen 'event-c', :event_c_handler
+	end
+```
+
+### Removing Listeners
+
+Listeners can be removed by pass the listener object or it's subscriber ID (unique integer).
+
+```ruby
+	listener = dispatcher.add 'event', MyListener
+	
+	dispatcher.remove listener
+	# or
+	dispatcher.remove listener.sid
+
+```
+
 ### Specifying Events
 
 The events can be a *dot.separated.string*.  Listeners can either sepecify the full 
@@ -95,42 +131,22 @@ multi-part string or can wildcard.
 	# => "wildcard handled"
 ```
 
-### Block Style Definition
+### Stopping Event Dispatch
+
+Normally, all event listener matching the message type passed are called.  However,
+dispatch can be aborted by raising the Dispatchio::StopDispatch exception from a listener's
+block or handle method.  The dispatch method returns false when aborted.
 
 ```ruby
-	Dispatchio::Dispatcher do
-		# Within the block you call +dispatch+ to add listeners.  Multiple 
-		#  formats are allowed:
-		#
-		# pass Event class
-		dispatch 'event-a', EventAListener
-
-		# pass block
-		dispatch 'event-b' do |payload|
-			# handler code
-		end
-
-		# pass lambda
-		dispatch 'event-c', ->(payload) { # handler code }
-
-		# pass method symbol
-		dispatch, 'event-c', :event_c_handler
+	dispatcher = Dispatcher.new do
+		listen('event') { puts "First" }
+		listen('event') { raise StopDispatch }
+		listen('event') { puts "Last" }
 	end
+	dispatcher.dispatch('event')
+	#	=> "First"
+	# => false
 ```
-
-### Removing Listeners
-
-Listeners can be removed by pass the listener object or it's subscriber ID (unique integer).
-
-```ruby
-	listener = dispatcher.add 'event', MyListener
-	
-	dispatcher.remove listener
-	# or
-	dispatcher.remove listener.sid
-
-```
-
 
 ## Contributing
 

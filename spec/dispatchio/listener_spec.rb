@@ -61,6 +61,19 @@ module Dispatchio
           expect(a1.sid).to eq(a2.sid-1)
         end
       end
+
+      describe "priority" do
+        describe "can be specified as a initialize hash variable" do
+          specify { expect(Listener.new('a', priority: :high).priority).to be == Listener::PRIORITY[:high] }
+          specify { expect(Listener.new('a', -> (x) {}, priority: :high).priority).to be == Listener::PRIORITY[:high] }
+          specify { 
+            listener = Listener.new 'a', priority: :high do |payload|
+              # ignore
+            end
+            expect(listener.priority).to be == Listener::PRIORITY[:high]
+          }
+        end
+      end
     end
 
     describe "#listens_for?" do
@@ -94,6 +107,20 @@ module Dispatchio
             specify { expect { Listener.new(malformed_str) }.to raise_error(ArgumentError) }  
           end
         end
+      end
+    end
+
+    describe "#<=>" do
+      let(:a) { Listener.new('a', priority: 25) }
+      let(:b) { Listener.new('b', priority: 75) }
+      it "is -1 when x.priority > y.priority" do
+        expect(b <=> a).to be == -1
+      end
+      it "is 0 when a.priority == b.priority" do
+        expect(b <=> b).to be == 0
+      end
+      it "is +1 when a.priority > b.priority" do
+        expect(a <=> b).to be == 1
       end
     end
 
