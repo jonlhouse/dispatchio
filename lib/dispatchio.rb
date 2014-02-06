@@ -1,5 +1,9 @@
 require "dispatchio/version"
+require "dispatchio/dispatcher"
+require "dispatchio/listener"
 
 module Dispatchio
-  # Your code goes here...
+  
+  # some error classes
+  class StopDispatch < StandardError ; end  
 end
