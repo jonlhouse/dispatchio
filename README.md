@@ -148,6 +148,26 @@ block or handle method.  The dispatch method returns false when aborted.
 	# => false
 ```
 
+### Priority
+
+Normally, all event listeners have equal priority and are run in the order in which they are 
+defined.  However, priority can be set to force certain listeners to receive dispatches earlier 
+or later than others.  Priority is on a [0, 100] scale and several symbols (:last, :low, :normal, 
+:high, :first) are accepted (see Listener::PRIORITY)
+
+```ruby
+	dispatcher = Dispatcher.new do
+		listen("event") { puts "Normal priority" }
+		listen("event", priority: low) { puts "Low priority"}
+		listen("event", priority: :high) { puts "High priority" }		
+	end
+	dispatcher.dispatch('event')
+	# => "High Priority"
+	# => "Normal Priority"
+	# => "Low Priority"
+
+```
+
 ## Contributing
 
 1. Fork it ( http://github.com/<my-github-username>/dispatchio/fork )
